@@ -1,8 +1,6 @@
-package com.mybank.gui;
+package com.example.fxdemo;
 
-import com.mybank.domain.Bank;
-import com.mybank.domain.CheckingAccount;
-import com.mybank.domain.SavingsAccount;
+import com.mybank.domain.*;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -40,6 +38,7 @@ public class FXDemo extends Application {
 
     private Text title;
     private Text details;
+    private Text report;
     private ComboBox clients;
 
     @Override
@@ -51,7 +50,7 @@ public class FXDemo extends Application {
         border.setLeft(addVBox());
         addStackPane(hbox);
 
-        Scene scene = new Scene(border, 300, 250);
+        Scene scene = new Scene(border, 400, 350);
 
         primaryStage.setTitle("MyBank Clients");
         primaryStage.setScene(scene);
@@ -73,7 +72,9 @@ public class FXDemo extends Application {
 
         details = new Text("Account:\t\t#0\nAcc Type:\tChecking\nBalance:\t\t$0000");
         details.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
+
         vbox.getChildren().add(details);
+
 
         return vbox;
     }
@@ -118,7 +119,49 @@ public class FXDemo extends Application {
             }
         });
 
-        hbox.getChildren().addAll(clients, buttonShow);
+        Button buttonReport = new Button("Report");
+        buttonReport.setPrefSize(100, 20);
+
+        buttonReport.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                StringBuilder report = new StringBuilder();
+                report.append("CUSTOMERS REPORT\n");
+                report.append("================\n");
+
+                for (int cust_idx = 0; cust_idx < Bank.getNumberOfCustomers(); cust_idx++) {
+                    Customer customer = Bank.getCustomer(cust_idx);
+                    report.append("\nCustomer: ")
+                            .append(customer.getLastName())
+                            .append(", ")
+                            .append(customer.getFirstName())
+                            .append("\n");
+
+                    for (int acct_idx = 0; acct_idx < customer.getNumberOfAccounts(); acct_idx++) {
+                        Account account = customer.getAccount(acct_idx);
+                        String accountType;
+                        if (account instanceof SavingsAccount) {
+                            accountType = "Savings Account";
+                        } else if (account instanceof CheckingAccount) {
+                            accountType = "Checking Account";
+                        } else {
+                            accountType = "Unknown Account Type";
+                        }
+
+                        report.append("    ")
+                                .append(accountType)
+                                .append(": current balance is $")
+                                .append(String.format("%.2f", account.getBalance()))
+                                .append("\n");
+                    }
+                }
+
+                // Виводимо звіт у нижній частині вікна
+                details.setText(report.toString());
+            }
+        });
+
+        hbox.getChildren().addAll(clients, buttonShow,  buttonReport);
 
         return hbox;
     }
@@ -128,9 +171,9 @@ public class FXDemo extends Application {
         Rectangle helpIcon = new Rectangle(30.0, 25.0);
         helpIcon.setFill(new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
                 new Stop[]{
-                    new Stop(0, Color.web("#4977A3")),
-                    new Stop(0.5, Color.web("#B0C6DA")),
-                    new Stop(1, Color.web("#9CB6CF")),}));
+                        new Stop(0, Color.web("#4977A3")),
+                        new Stop(0.5, Color.web("#B0C6DA")),
+                        new Stop(1, Color.web("#9CB6CF")),}));
         helpIcon.setStroke(Color.web("#D0E6FA"));
         helpIcon.setArcHeight(3.5);
         helpIcon.setArcWidth(3.5);
@@ -153,7 +196,7 @@ public class FXDemo extends Application {
                 ShowAboutInfo();
             }
         });
-        
+
         stack.getChildren().addAll(helpIcon, helpText);
         stack.setAlignment(Pos.CENTER_RIGHT);     // Right-justify nodes in stack
         StackPane.setMargin(helpText, new Insets(0, 10, 0, 0)); // Center "?"
@@ -171,10 +214,15 @@ public class FXDemo extends Application {
         alert.showAndWait();
     }
 
+    private void Report(){
+
+    }
+
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+
         Bank.addCustomer("John", "Doe");
         Bank.getCustomer(0).addAccount(new SavingsAccount(100, 2));
         Bank.addCustomer("Fox", "Mulder");
